@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Aggregator POM: lets you build every project of the repository with ONE command
+  (mvn package) from this folder. It does not share code or dependencies;
+  each module is a complete, independent Maven project.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>ma.project</groupId>
+    <artifactId>tcp-chat</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <name>TCP Chat (aggregator)</name>
+
+    <modules>
+        <module>chat-server</module>
+    </modules>
+</project>
