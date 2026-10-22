@@ -1,0 +1,148 @@
+/*
+ * Styling of the chat client. Same palette as the server dashboard, so the two apps look like a family.
+ * Only presentation lives here: no Java change is needed to restyle the app.
+ */
+
+.root {
+    -accent: #2563eb;
+    -danger: #dc2626;
+    -ink: #111827;
+    -muted: #6b7280;
+    -line: #e5e7eb;
+    -panel: #ffffff;
+    -page: #f3f4f6;
+    -fx-font-family: "Segoe UI", "Helvetica Neue", "DejaVu Sans", sans-serif;
+    -fx-font-size: 13px;
+}
+
+/* ---------- buttons (shared) ---------- */
+.button {
+    -fx-background-radius: 8;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+.button.primary { -fx-background-color: -accent; -fx-text-fill: white; }
+.button.danger  { -fx-background-color: -danger; -fx-text-fill: white; }
+.button.primary:hover { -fx-background-color: derive(-accent, -12%); }
+.button.danger:hover  { -fx-background-color: derive(-danger, -12%); }
+.button.subtle {
+    -fx-background-color: white;
+    -fx-border-color: -line;
+    -fx-border-radius: 8;
+    -fx-text-fill: #374151;
+    -fx-font-weight: normal;
+}
+.button:disabled { -fx-opacity: 0.4; }
+
+.text-field, .text-area {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #d1d5db;
+    -fx-background-color: white;
+    -fx-padding: 7 10;
+}
+.text-field:focused, .text-area:focused { -fx-border-color: -accent; }
+.text-area .content { -fx-background-color: white; -fx-background-radius: 8; }
+
+/* ---------- login screen ---------- */
+.login-page { -fx-background-color: linear-gradient(to bottom right, #1e3a8a, #111827); }
+.login-card {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-padding: 28 32;
+    -fx-hgap: 12;
+    -fx-vgap: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 24, 0.2, 0, 6);
+}
+.login-title    { -fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: -ink; }
+.login-subtitle { -fx-text-fill: -muted; -fx-padding: 0 0 8 0; }
+.field-label    { -fx-text-fill: #374151; -fx-font-weight: bold; }
+.hint           { -fx-text-fill: -muted; -fx-font-size: 12px; -fx-max-width: 400; }
+.login-error    { -fx-text-fill: -danger; -fx-font-weight: bold; -fx-max-width: 400; }
+
+/* ---------- chat screen: GridPane ---------- */
+.chat-page {
+    -fx-background-color: -page;
+    -fx-padding: 0 16 14 16;
+    -fx-hgap: 12;
+    -fx-vgap: 10;
+}
+.chat-header {
+    -fx-background-color: #111827;
+    -fx-padding: 12 16;
+    -fx-background-insets: 0 -16 0 -16;
+}
+.chat-title    { -fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold; }
+.chat-subtitle { -fx-text-fill: #9ca3af; -fx-font-size: 11px; }
+.me-avatar {
+    -fx-background-color: -accent;
+    -fx-background-radius: 999;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-min-width: 32; -fx-min-height: 32; -fx-max-width: 32; -fx-max-height: 32;
+    -fx-alignment: center;
+}
+.me-name { -fx-text-fill: white; -fx-font-weight: bold; }
+.me-mode { -fx-text-fill: #9ca3af; -fx-font-size: 10px; -fx-font-weight: bold; }
+
+.status-pill {
+    -fx-background-color: #1f2937;
+    -fx-background-radius: 999;
+    -fx-padding: 6 12;
+}
+.status-text { -fx-text-fill: #e5e7eb; }
+.status-dot.online  { -fx-fill: #22c55e; }
+.status-dot.offline { -fx-fill: #ef4444; }
+
+.readonly-banner {
+    -fx-background-color: #fef3c7;
+    -fx-text-fill: #92400e;
+    -fx-background-radius: 8;
+    -fx-padding: 8 12;
+    -fx-font-weight: bold;
+}
+
+/* ---------- conversation ---------- */
+.messages {
+    -fx-background-color: -panel;
+    -fx-background-radius: 10;
+    -fx-border-color: -line;
+    -fx-border-radius: 10;
+    -fx-padding: 8;
+}
+.messages .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 3 4;
+}
+.messages .placeholder .label { -fx-text-fill: -muted; }
+
+.bubble {
+    -fx-background-radius: 14;
+    -fx-padding: 7 12 6 12;
+}
+.bubble.theirs { -fx-background-color: #eef0f3; -fx-background-radius: 4 14 14 14; }
+.bubble.mine   { -fx-background-color: -accent;  -fx-background-radius: 14 4 14 14; }
+.bubble-sender { -fx-font-weight: bold; -fx-font-size: 12px; }
+.bubble-text   { -fx-text-fill: -ink; }
+.bubble.mine .bubble-text { -fx-text-fill: white; }
+.bubble-time   { -fx-font-size: 10px; -fx-text-fill: #6b7280; }
+.bubble.mine .bubble-time { -fx-text-fill: #bfdbfe; }
+
+.info-line  { -fx-text-fill: -muted; -fx-font-size: 11px; -fx-padding: 4 0; }
+.error-line {
+    -fx-text-fill: #991b1b;
+    -fx-background-color: #fee2e2;
+    -fx-background-radius: 8;
+    -fx-padding: 5 10;
+    -fx-font-size: 12px;
+}
+.users-line {
+    -fx-text-fill: #1e3a8a;
+    -fx-background-color: #dbeafe;
+    -fx-background-radius: 8;
+    -fx-padding: 5 10;
+    -fx-font-size: 12px;
+}
+
+.message-input { -fx-font-size: 13px; }

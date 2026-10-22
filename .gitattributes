@@ -1,0 +1,6 @@
+# Store text files with LF line endings in the repository; Git converts them to the
+# right ending for each OS on checkout. Silences the "LF will be replaced by CRLF" warnings.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jar binary
