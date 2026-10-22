@@ -1,0 +1,136 @@
+/*
+ * Styling of the server dashboard. JavaFX CSS looks like web CSS, but every property starts with -fx-.
+ * Change colours, fonts and spacing here: no Java code needs to change (presentation is separate).
+ */
+
+/* ---------- palette (looked-up colours, reused below) ---------- */
+.root {
+    -accent: #2563eb;
+    -danger: #dc2626;
+    -ink: #111827;
+    -muted: #6b7280;
+    -line: #e5e7eb;
+    -panel: #ffffff;
+    -page: #f3f4f6;
+    -fx-font-family: "Segoe UI", "Helvetica Neue", "DejaVu Sans", sans-serif;
+    -fx-font-size: 13px;
+}
+
+/* ---------- the GridPane ---------- */
+.dashboard {
+    -fx-background-color: -page;
+    -fx-padding: 0 18 14 18;
+    -fx-hgap: 16;
+    -fx-vgap: 10;
+}
+
+/* ---------- header (row 0) ---------- */
+.header {
+    -fx-background-color: #111827;
+    -fx-padding: 14 18;
+    -fx-background-insets: 0 -18 0 -18;   /* bleed to the window edges */
+}
+.title {
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+.subtitle {
+    -fx-text-fill: #9ca3af;
+    -fx-font-size: 12px;
+}
+.status-pill {
+    -fx-background-color: #1f2937;
+    -fx-background-radius: 999;
+    -fx-padding: 6 14;
+}
+.status-text {
+    -fx-text-fill: #e5e7eb;
+}
+.status-dot.online  { -fx-fill: #22c55e; }
+.status-dot.offline { -fx-fill: #ef4444; }
+
+/* ---------- buttons ---------- */
+.button {
+    -fx-background-radius: 8;
+    -fx-padding: 7 16;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+.button.primary { -fx-background-color: -accent; -fx-text-fill: white; }
+.button.danger  { -fx-background-color: -danger; -fx-text-fill: white; }
+.button.primary:hover { -fx-background-color: derive(-accent, -12%); }
+.button.danger:hover  { -fx-background-color: derive(-danger, -12%); }
+.button.subtle {
+    -fx-background-color: transparent;
+    -fx-border-color: -line;
+    -fx-border-radius: 8;
+    -fx-text-fill: -muted;
+    -fx-font-weight: normal;
+    -fx-padding: 4 12;
+}
+.button:disabled { -fx-opacity: 0.35; }
+
+/* ---------- section titles (row 1) ---------- */
+.section-title {
+    -fx-text-fill: -muted;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 0 0 2;
+}
+
+/* ---------- both lists ---------- */
+.list-view {
+    -fx-background-color: -panel;
+    -fx-background-radius: 10;
+    -fx-border-color: -line;
+    -fx-border-radius: 10;
+    -fx-padding: 6;
+}
+.list-view .placeholder .label { -fx-text-fill: -muted; }
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -ink;
+}
+
+/* ---------- activity log ---------- */
+.log-list .list-cell {
+    -fx-font-family: "Consolas", "DejaVu Sans Mono", monospace;
+    -fx-font-size: 12px;
+    -fx-padding: 3 8;
+}
+.log-list .list-cell:filled:hover { -fx-background-color: #f9fafb; }
+.log-list .list-cell.log-system { -fx-text-fill: #374151; }
+.log-list .list-cell.log-chat   { -fx-text-fill: -accent; }
+.log-list .list-cell.log-error  { -fx-text-fill: -danger; -fx-font-weight: bold; }
+
+/* ---------- user list: one coloured card per user ---------- */
+.user-list .list-cell { -fx-padding: 3 2; }
+.user-card {
+    -fx-background-radius: 9;   /* the colour itself is set per user from Java */
+    -fx-padding: 8 10;
+}
+.avatar {
+    -fx-background-color: rgba(17, 24, 39, 0.10);
+    -fx-background-radius: 999;
+    -fx-min-width: 32; -fx-min-height: 32;
+    -fx-max-width: 32; -fx-max-height: 32;
+    -fx-alignment: center;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ink;
+}
+.user-name   { -fx-font-weight: bold; -fx-text-fill: -ink; }
+.user-name.read-only { -fx-font-style: italic; -fx-font-weight: normal; }
+.user-detail { -fx-font-size: 11px; -fx-text-fill: #4b5563; }
+.badge {
+    -fx-background-color: rgba(17, 24, 39, 0.75);
+    -fx-text-fill: white;
+    -fx-background-radius: 6;
+    -fx-padding: 2 7;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+/* ---------- footer (row 3) ---------- */
+.stats  { -fx-text-fill: -muted; }
+.legend { -fx-text-fill: -muted; -fx-font-size: 11px; }
