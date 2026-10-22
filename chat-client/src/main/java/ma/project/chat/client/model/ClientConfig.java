@@ -6,6 +6,8 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -14,7 +16,8 @@ import java.util.Properties;
  * <p>Priority, highest first (decision D1):
  * <ol>
  *   <li>command-line arguments: {@code java TCPClient <ServerIPAddress> <PortNumber>} (spec 4.1);</li>
- *   <li>{@code client.properties} in the current working directory (spec 3.3, no recompiling);</li>
+ *   <li>{@code client.properties} in the current working directory;</li>
+ *   <li>{@code client.properties} in the folder that contains the running JAR (spec 3.3, no recompiling);</li>
  *   <li>{@code client.properties} bundled inside the JAR;</li>
  *   <li>built-in defaults: localhost, port 3001.</li>
  * </ol>
@@ -57,16 +60,17 @@ public record ClientConfig(String host, int port, String source) {
         return loadFile();
     }
 
-    /** Reads client.properties from the working directory, then the classpath, else defaults. */
+    /** Reads client.properties: working directory, JAR folder, classpath, else defaults. */
     public static ClientConfig loadFile() {
-        Path external = Path.of(FILE_NAME);
-        if (Files.isRegularFile(external)) {
-            try (Reader reader = Files.newBufferedReader(external, StandardCharsets.UTF_8)) {
-                Properties props = new Properties();
-                props.load(reader);
-                return fromProperties(props, external.toAbsolutePath().toString());
-            } catch (IOException e) {
-                throw new IllegalStateException("Cannot read " + external.toAbsolutePath(), e);
+        for (Path candidate : externalCandidates()) {
+            if (Files.isRegularFile(candidate)) {
+                try (Reader reader = Files.newBufferedReader(candidate, StandardCharsets.UTF_8)) {
+                    Properties props = new Properties();
+                    props.load(reader);
+                    return fromProperties(props, candidate.toAbsolutePath().normalize().toString());
+                } catch (IOException e) {
+                    throw new IllegalStateException("Cannot read " + candidate.toAbsolutePath(), e);
+                }
             }
         }
         try (InputStream in = ClientConfig.class.getResourceAsStream("/" + FILE_NAME)) {
@@ -86,6 +90,27 @@ public record ClientConfig(String host, int port, String source) {
         String host = props.getProperty(KEY_IP, DEFAULT_HOST).strip();
         String rawPort = props.getProperty(KEY_PORT, String.valueOf(DEFAULT_PORT));
         return new ClientConfig(host, parsePort(rawPort, source), source);
+    }
+
+    /** Files to try before the bundled copy: working directory, then the JAR's own folder. */
+    private static List<Path> externalCandidates() {
+        List<Path> candidates = new ArrayList<>();
+        candidates.add(Path.of(FILE_NAME));
+        Path jarFolder = jarFolder();
+        if (jarFolder != null) {
+            candidates.add(jarFolder.resolve(FILE_NAME));
+        }
+        return candidates;
+    }
+
+    /** The folder containing the running JAR, or null when running from target/classes. */
+    static Path jarFolder() {
+        try {
+            Path location = Path.of(ClientConfig.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            return Files.isRegularFile(location) ? location.getParent() : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private static int parsePort(String raw, String where) {

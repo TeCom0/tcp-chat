@@ -6,6 +6,8 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -13,9 +15,11 @@ import java.util.Properties;
  *
  * <p>Lookup order (first found wins):
  * <ol>
- *   <li>{@code server.properties} in the current working directory, editable without recompiling;</li>
+ *   <li>{@code server.properties} in the current working directory;</li>
+ *   <li>{@code server.properties} in the folder that contains the running JAR (edit it, restart, no
+ *       recompiling: spec 3.3);</li>
  *   <li>{@code server.properties} bundled inside the JAR (src/main/resources);</li>
- *   <li>built-in defaults: 0.0.0.0, port 3000.</li>
+ *   <li>built-in defaults: 0.0.0.0, port 3001.</li>
  * </ol>
  *
  * @param ip     address to listen on (0.0.0.0 = all network interfaces)
@@ -28,7 +32,7 @@ public record ServerConfig(String ip, int port, String source) {
     public static final String KEY_IP = "server.ip";
     public static final String KEY_PORT = "server.port";
     public static final String DEFAULT_IP = "0.0.0.0";
-    public static final int DEFAULT_PORT = 3000;
+    public static final int DEFAULT_PORT = 3001;
 
     /** Compact constructor: runs on every creation and rejects impossible values early. */
     public ServerConfig {
@@ -42,12 +46,13 @@ public record ServerConfig(String ip, int port, String source) {
 
     /** Loads the configuration using the lookup order described above. */
     public static ServerConfig load() {
-        Path external = Path.of(FILE_NAME);
-        if (Files.isRegularFile(external)) {
-            try (Reader reader = Files.newBufferedReader(external, StandardCharsets.UTF_8)) {
-                return fromProperties(read(reader), external.toAbsolutePath().toString());
-            } catch (IOException e) {
-                throw new IllegalStateException("Cannot read " + external.toAbsolutePath(), e);
+        for (Path candidate : externalCandidates()) {
+            if (Files.isRegularFile(candidate)) {
+                try (Reader reader = Files.newBufferedReader(candidate, StandardCharsets.UTF_8)) {
+                    return fromProperties(read(reader), candidate.toAbsolutePath().normalize().toString());
+                } catch (IOException e) {
+                    throw new IllegalStateException("Cannot read " + candidate.toAbsolutePath(), e);
+                }
             }
         }
         try (InputStream in = ServerConfig.class.getResourceAsStream("/" + FILE_NAME)) {
@@ -73,6 +78,30 @@ public record ServerConfig(String ip, int port, String source) {
             throw new IllegalArgumentException(KEY_PORT + " must be a number, got '" + rawPort + "' in " + source);
         }
         return new ServerConfig(ip, port, source);
+    }
+
+    /** Files to try before the bundled copy: working directory, then the JAR's own folder. */
+    private static List<Path> externalCandidates() {
+        List<Path> candidates = new ArrayList<>();
+        candidates.add(Path.of(FILE_NAME));
+        Path jarFolder = jarFolder();
+        if (jarFolder != null) {
+            candidates.add(jarFolder.resolve(FILE_NAME));
+        }
+        return candidates;
+    }
+
+    /**
+     * The folder containing the running JAR, or null when not running from a JAR (e.g. from
+     * target/classes in IntelliJ). getCodeSource().getLocation() is where this class was loaded from.
+     */
+    static Path jarFolder() {
+        try {
+            Path location = Path.of(ServerConfig.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            return Files.isRegularFile(location) ? location.getParent() : null; // a file = a JAR, a folder = classes
+        } catch (Exception e) {
+            return null; // unusual class loader or security restrictions: just skip this location
+        }
     }
 
     private static Properties read(Reader reader) throws IOException {
