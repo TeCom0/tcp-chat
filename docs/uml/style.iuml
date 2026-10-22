@@ -1,0 +1,17 @@
+' Shared look for every diagram (included with !include style.iuml)
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam roundCorner 8
+skinparam ArrowColor #374151
+skinparam ClassBorderColor #374151
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassHeaderBackgroundColor #E5E7EB
+skinparam PackageBorderColor #9CA3AF
+skinparam PackageBackgroundColor #F9FAFB
+skinparam NoteBackgroundColor #FEF3C7
+skinparam NoteBorderColor #D97706
+skinparam stereotypeCBackgroundColor #DBEAFE
+skinparam stereotypeIBackgroundColor #DCFCE7

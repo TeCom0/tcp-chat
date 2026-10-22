@@ -1,0 +1,112 @@
+@startuml server-classes
+!include style.iuml
+title TCPServer - class diagram\n<size:11>Model (no JavaFX) | View (JavaFX) | Console view</size>
+
+class TCPServer <<launcher>> {
+  +{static} main(args : String[])
+}
+
+package "ma.project.chat.server.model  (no JavaFX imports)" as model {
+  class ChatServer {
+    -config : ServerConfig
+    -clients : Map<String, ClientHandler>
+    -chatLock : Object
+    -listeners : List<ServerListener>
+    -running : volatile boolean
+    -executor : ExecutorService
+    +start()
+    +stop()
+    +awaitStop()
+    +activeUsers() : List<ConnectedUser>
+    +addListener(l : ServerListener)
+    ~join(h : ClientHandler, name : String, address : String) : ConnectedUser
+    ~chat(from : ConnectedUser, text : String)
+    ~leave(h : ClientHandler, u : ConnectedUser)
+    ~usersLine() : String
+    -acceptLoop()
+    -broadcastLocked(line : String)
+  }
+  class ClientHandler <<Runnable>> {
+    -socket : Socket
+    -in : BufferedReader
+    -out : PrintWriter
+    -user : volatile ConnectedUser
+    +run()
+    ~send(line : String)
+    ~close()
+  }
+  interface ServerListener {
+    +onLog(message : String)
+    +onUserJoined(u : ConnectedUser)
+    +onUserLeft(u : ConnectedUser)
+    +onChatMessage(sender : String, text : String, time : String)
+    +onServerStopped()
+  }
+  class ConnectedUser <<record>> {
+    +name : String
+    +readOnly : boolean
+    +address : String
+    +joinedAt : Instant
+    +mode() : String
+  }
+  class ServerConfig <<record>> {
+    +ip : String
+    +port : int
+    +source : String
+    +{static} load() : ServerConfig
+  }
+  class Protocol <<utility>> {
+    +{static} WELCOME, MSG, INFO, USERS, ERROR, BYE
+    +{static} isQuit(text) : boolean
+    +{static} isAllUsers(text) : boolean
+    +{static} sanitizeName(raw) : String
+    +{static} line(type, fields...) : String
+  }
+}
+
+package "ma.project.chat.server.view  (JavaFX)" as view {
+  class ServerApp <<Application>> {
+    +start(stage : Stage)
+    +stop()
+  }
+  class ServerDashboard {
+    -root : GridPane
+    -users : ObservableList<ConnectedUser>
+    -logEntries : ObservableList<LogEntry>
+    +startServer()
+    -onFxThread(work : Runnable)
+  }
+  class UserColors {
+    -colourByName : Map<String, String>
+    ~colourFor(name : String) : String
+  }
+}
+
+package "ma.project.chat.server.console" as console {
+  class ConsoleServer {
+    +{static} run()
+  }
+}
+
+TCPServer ..> ServerApp : launches (default)
+TCPServer ..> ConsoleServer : launches (--console)
+ServerApp --> ChatServer : creates
+ServerApp --> ServerDashboard : creates
+ServerDashboard --> ChatServer : start() / stop()
+ServerDashboard ..|> ServerListener
+ConsoleServer ..|> ServerListener
+ServerDashboard *-- UserColors
+
+ChatServer "1" o-- "0..*" ClientHandler : one virtual thread each
+ChatServer "1" --> "0..*" ServerListener : notifies
+ChatServer --> ServerConfig
+ClientHandler --> ChatServer : join / chat / leave
+ClientHandler --> ConnectedUser
+ChatServer ..> Protocol
+ClientHandler ..> Protocol
+
+note bottom of model
+  The arrows only go INTO the model, never out of it:
+  the model talks to views solely through ServerListener.
+end note
+@enduml

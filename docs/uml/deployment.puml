@@ -1,0 +1,55 @@
+@startuml deployment
+!include style.iuml
+skinparam NodeBorderColor #374151
+skinparam NodeBackgroundColor #F9FAFB
+skinparam ArtifactBackgroundColor #FFFFFF
+skinparam ArtifactBorderColor #374151
+skinparam ComponentBackgroundColor #DBEAFE
+skinparam ComponentBorderColor #2563EB
+title Deployment diagram\n<size:11>one server machine, N client machines, TCP/IP over a LAN or the Internet</size>
+
+node "Server machine\n<size:10>Windows / macOS / Linux</size>" as srv <<device>> {
+  node "JVM 21\n<size:10>java -jar TCPServer.jar</size>" as sjvm <<execution environment>> {
+    artifact "TCPServer.jar\n<size:10>fat JAR: classes + JavaFX</size>" as sjar
+    component "ChatServer\n<size:10>ServerSocket bound to 0.0.0.0:3001</size>\n<size:10>1 virtual thread per client</size>" as cs
+    component "ServerDashboard\n<size:10>JavaFX window</size>" as dash
+  }
+  artifact "server.properties\n<size:10>server.ip=0.0.0.0</size>\n<size:10>server.port=3001</size>" as sprops
+}
+
+node "Client machine 1" as c1 <<device>> {
+  node "JVM 21\n<size:10>java -jar TCPClient.jar 192.168.1.10 3001</size>" as cjvm1 <<execution environment>> {
+    artifact "TCPClient.jar" as cjar1
+    component "ChatClient + ChatView" as cc1
+  }
+  artifact "client.properties" as cprops1
+}
+
+node "Client machine 2" as c2 <<device>> {
+  node "JVM 21" as cjvm2 <<execution environment>> {
+    artifact "TCPClient.jar" as cjar2
+    component "ChatClient + ChatView" as cc2
+  }
+  artifact "client.properties" as cprops2
+}
+
+node "Client machine N" as cn <<device>> {
+  node "JVM 21" as cjvmn <<execution environment>> {
+    component "ChatClient\n<size:10>(or --console mode)</size>" as ccn
+  }
+}
+
+sjvm ..> sprops : reads at startup
+cjvm1 ..> cprops1 : reads if no arguments
+cjvm2 ..> cprops2
+
+cc1 -- cs : TCP/IP  :3001\nUTF-8 text lines
+cc2 -- cs : TCP/IP  :3001
+ccn -- cs : TCP/IP  :3001
+
+note bottom of cs
+  Protocol over each TCP connection:
+  client -> server: username, then typed lines (allUsers, bye, end)
+  server -> client: WELCOME | MSG | INFO | USERS | ERROR | BYE
+end note
+@enduml

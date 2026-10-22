@@ -1,0 +1,62 @@
+@startuml sequence
+!include style.iuml
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #374151
+skinparam SequenceLifeLineBorderColor #9CA3AF
+skinparam SequenceGroupBorderColor #9CA3AF
+skinparam SequenceGroupBackgroundColor #F3F4F6
+title Sequence diagram: join, message, allUsers, leave\n<size:11>Omar is already connected; Sara joins, chats, then leaves</size>
+
+actor Sara
+participant "Sara's client\n<size:10>ChatView + ChatClient</size>" as SC
+participant "ClientHandler (Sara)\n<size:10>virtual thread</size>" as HS
+participant "ChatServer" as CS
+participant "ClientHandler (Omar)" as HO
+participant "Omar's client" as OC
+
+== 1. Join (handshake) ==
+Sara -> SC : types "Sara", presses Join
+SC -> HS : TCP connect to :3001
+note right of CS : accept loop wraps the socket\nin a new ClientHandler\non its own virtual thread
+SC -> HS : "Sara"
+HS -> CS : join(handler, "Sara", address)
+activate CS
+note right of CS : under chatLock:\nunique name, register,\nWELCOME first, then announce
+CS -> HS : send("WELCOME|Sara|FULL")
+HS -> SC : WELCOME|Sara|FULL
+CS -> HO : send("INFO|14:05|Sara joined the chat")
+HO -> OC : INFO|14:05|Sara joined the chat
+CS -> HS : send(same INFO)
+HS -> SC : INFO|14:05|Sara joined the chat
+deactivate CS
+SC -> Sara : chat screen, status "Online"
+
+== 2. Chat message (broadcast to everyone, sender included) ==
+Sara -> SC : types "hello", presses Enter
+SC -> HS : "hello"
+HS -> CS : chat(Sara, "hello")
+activate CS
+CS -> HS : MSG|14:06|Sara|hello
+HS -> SC : MSG|14:06|Sara|hello
+CS -> HO : MSG|14:06|Sara|hello
+HO -> OC : MSG|14:06|Sara|hello
+deactivate CS
+note over SC, OC : every client receives the same server-stamped line, in the same order
+
+== 3. allUsers (answered to the asker only) ==
+Sara -> SC : types "allUsers"
+SC -> HS : "allUsers"
+HS -> CS : usersLine()
+CS --> HS : "USERS|Omar:FULL,Sara:FULL"
+HS -> SC : USERS|Omar:FULL,Sara:FULL
+
+== 4. Leave ==
+Sara -> SC : clicks LEAVE (or types bye / end)
+SC -> HS : "bye"
+HS -> SC : BYE|Goodbye Sara
+SC -> Sara : status "Offline"
+HS -> CS : leave(handler, Sara)
+CS -> HO : INFO|14:07|Sara left the chat
+HO -> OC : INFO|14:07|Sara left the chat
+HS -> HS : finally: close socket, thread ends
+@enduml

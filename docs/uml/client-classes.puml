@@ -1,0 +1,118 @@
+@startuml client-classes
+!include style.iuml
+title TCPClient - class diagram\n<size:11>Model (no JavaFX) | View (JavaFX) | Console view</size>
+
+class TCPClient <<launcher>> {
+  +{static} main(args : String[])
+}
+
+package "ma.project.chat.client.model  (no JavaFX imports)" as model {
+  class ChatClient {
+    -config : ClientConfig
+    -listeners : List<ClientListener>
+    -socket : volatile Socket
+    -out : volatile PrintWriter
+    -connected : volatile boolean
+    -username : volatile String
+    -readOnly : volatile boolean
+    -finished : AtomicBoolean
+    +connect(requestedName : String)
+    +send(text : String)
+    +requestUserList()
+    +disconnect()
+    -readLoop(owner : Socket, reader : BufferedReader)
+    -dispatch(e : ServerEvent)
+    -finish(owner : Socket, reason : String)
+  }
+  interface ClientListener {
+    +onConnected(name : String, readOnly : boolean)
+    +onChatMessage(time, sender, text : String, fromMe : boolean)
+    +onInfo(time : String, text : String)
+    +onUserList(users : List<UserEntry>)
+    +onError(message : String)
+    +onDisconnected(reason : String)
+  }
+  interface ServerEvent <<sealed>> {
+    +{static} parse(line : String) : ServerEvent
+  }
+  class Welcome <<record>>
+  class Chat <<record>>
+  class Info <<record>>
+  class Users <<record>>
+  class ServerError <<record>>
+  class Bye <<record>>
+  class Unknown <<record>>
+  class UserEntry <<record>> {
+    +name : String
+    +readOnly : boolean
+  }
+  class ClientConfig <<record>> {
+    +host : String
+    +port : int
+    +source : String
+    +{static} resolve(args : String[]) : ClientConfig
+  }
+  class Protocol <<utility>>
+}
+
+package "ma.project.chat.client.view  (JavaFX)" as view {
+  class ClientApp <<Application>> {
+    -client : volatile ChatClient
+    +start(stage : Stage)
+    +stop()
+    -connect(host, port, username)
+    -backToLogin()
+  }
+  class LoginView {
+    -hostField, portField, nameField : TextField
+    ~setBusy(busy : boolean)
+    ~showError(message : String)
+  }
+  class ChatView {
+    -root : GridPane
+    -messages : ObservableList<MessageItem>
+    -statusDot : Circle
+    -input : TextArea
+    -send()
+  }
+  class NameColors <<utility>> {
+    ~{static} colourFor(name : String) : String
+  }
+}
+
+package "ma.project.chat.client.console" as console {
+  class ConsoleClient {
+    +{static} run(config : ClientConfig)
+  }
+}
+
+TCPClient ..> ClientConfig : validates args
+TCPClient ..> ClientApp : launches (default)
+TCPClient ..> ConsoleClient : launches (--console)
+ClientApp --> LoginView : screen 1
+ClientApp --> ChatView : screen 2
+ClientApp --> ChatClient : creates, connects\n(on a virtual thread)
+ChatView --> ChatClient : send / disconnect
+ChatView ..|> ClientListener
+ConsoleClient ..|> ClientListener
+ChatView ..> NameColors
+
+ChatClient "1" --> "0..*" ClientListener : notifies
+ChatClient --> ClientConfig
+ChatClient ..> ServerEvent : parses every line
+ChatClient ..> Protocol
+ServerEvent <|.. Welcome
+ServerEvent <|.. Chat
+ServerEvent <|.. Info
+ServerEvent <|.. Users
+ServerEvent <|.. ServerError
+ServerEvent <|.. Bye
+ServerEvent <|.. Unknown
+Users --> "0..*" UserEntry
+
+note right of ServerEvent
+  sealed: the 7 records are the only
+  implementations, so the switch in
+  dispatch() is checked by the compiler
+end note
+@enduml

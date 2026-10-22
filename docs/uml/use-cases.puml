@@ -1,0 +1,46 @@
+@startuml use-cases
+!include style.iuml
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam UsecaseBorderColor #374151
+skinparam ActorBorderColor #374151
+left to right direction
+title Use case diagram
+
+actor "Guest\n<size:10>(no username)</size>" as Guest
+actor "Chat user\n<size:10>(with username)</size>" as User
+actor "Server operator" as Admin
+
+User -|> Guest
+
+rectangle "TCPClient" {
+  usecase "Connect to the server" as UC1
+  usecase "Read the conversation" as UC2
+  usecase "See who is online\n(allUsers)" as UC3
+  usecase "Leave the chat\n(LEAVE, bye, end)" as UC4
+  usecase "Send a message\n(SEND or Enter)" as UC5
+  usecase "Enter a username" as UC6
+}
+
+rectangle "TCPServer" {
+  usecase "Start / stop the server" as UA1
+  usecase "Watch the activity log" as UA2
+  usecase "See connected users\n(coloured list)" as UA3
+}
+
+Guest --> UC1
+Guest --> UC2
+Guest --> UC3
+Guest --> UC4
+User --> UC5
+UC1 <.. UC6 : <<extend>>\nonly a named user
+
+Admin --> UA1
+Admin --> UA2
+Admin --> UA3
+
+note right of UC5
+  A guest is in READ-ONLY MODE:
+  everything a user can do,
+  except sending messages
+end note
+@enduml
